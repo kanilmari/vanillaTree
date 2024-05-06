@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to render the whole tree
     function renderTree(data) {
-        const treeContainer = document.getElementById('tree');
+        const treeContainer = document.getElementById('vanillaTree');
         treeContainer.innerHTML = ''; // Clear previous contents
 
         // Check configuration for data model type
