@@ -1,4 +1,5 @@
-Quick start: Download project and run index.html
+Quick start: Download project and run index.html. Enjoy testing!
+
 
 Works with or without a server
 
