@@ -3,9 +3,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const config = {
         checkboxMode: 'all',  // 'all', 'leaf' OR 'none'
         useIcons: false,       // true OR false
-        populateCheckboxSelection: true // true OR false
+        populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
+        useServerData: false,    // Server connection needed if true // true to fetch from server, false to use hardcoded data
+        maxRecursionDepth: 500 // 0 = disable // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
     };
 
+    // Function to send selected IDs to the server
     function sendSelectedNodeIds(selectedIds) {
         fetch('/selectednodes', {
             method: 'POST',
@@ -14,21 +17,35 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             body: JSON.stringify({ selectedIds: selectedIds })
         })
-        .then(response => response.text())
-        .then(data => {
-            try {
-                const jsonData = JSON.parse(data);
-                console.log('Success:', jsonData);
-            } catch (error) {
-                console.error('Error parsing JSON:', error);
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+            .then(response => response.text())
+            .then(data => {
+                try {
+                    const jsonData = JSON.parse(data);
+                    console.log('Success:', jsonData);
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
-    
-    const data = {
+
+    // Function to fetch tree data from the server
+    function fetchTreeData() {
+        fetch('/treenodes')
+            .then(response => response.json())
+            .then(data => {
+                renderTree(data);
+            })
+            .catch(error => {
+                console.error('Failed to load tree data from server, using hardcoded data:', error);
+                renderTree(hardcodedData); // Fallback to hardcoded data in case of failure
+            });
+    }
+
+    // If you prefer a serverless approach, you can hardcode the node data below:
+    const hardcodedData = {
         "id": "r1",
         "name": "Root Node",
         "children": [
@@ -89,12 +106,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const svgToggle = `<svg class="toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 
     // Function to update the state of a parent checkbox based on the state of its children
-    function setParentCheckboxState(childCheckbox) {
+    function setParentCheckboxState(childCheckbox, depth = 0) {
+        // Define a maximum depth limit for recursion
+
         let parentElement = childCheckbox.closest('.node').parentElement.closest('.node');
-        if (!parentElement) return; // Exit if there is no parent node (i.e., this is the root)
+        if (!parentElement || depth >= config.maxRecursionDepth) {
+            console.log('Max recursion depth reached or no parent found');
+            return; // Exit if there is no parent node or the depth limit is exceeded
+        }
 
         const parentCheckbox = parentElement.querySelector('input[type="checkbox"]');
-        if (!parentCheckbox) return; // If no checkbox found, exit the function
+        if (!parentCheckbox) {
+            console.log('No checkbox found at this level');
+            return; // If no checkbox found, exit the function
+        }
 
         const childCheckboxes = parentElement.querySelectorAll('.children input[type="checkbox"]');
         let allChecked = true;
@@ -123,8 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update the data-indeterminate attribute before the recursive call
         parentCheckbox.setAttribute('data-indeterminate', parentCheckbox.indeterminate ? 'true' : 'false');
 
-        // Recursive call to update the state up the tree
-        setParentCheckboxState(parentCheckbox);
+        // Recursive call to update the state up the tree, increasing the depth
+        setParentCheckboxState(parentCheckbox, depth + 1);
     }
     // Function to get IDs of all selected nodes
     function getSelectedNodeIds() {
@@ -145,7 +170,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Create a toggle element for showing/hiding children
         const toggle = document.createElement('div');
         toggle.classList.add('toggle');
-        if (nodeData.children && nodeData.children.length > 0) {
+        // Check if there are children to decide on toggle functionality
+        if (Array.isArray(nodeData.children) && nodeData.children.length > 0) {
             toggle.innerHTML = svgToggle; // Load toggle icon if there are children
             toggle.addEventListener('click', function () {
                 this.classList.toggle('rotated');
@@ -178,16 +204,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             childCheckbox.indeterminate = false;
                         });
                     }
-            
+
                     // Update data attribute and parent state
                     this.setAttribute('data-indeterminate', this.indeterminate ? 'true' : 'false');
                     setParentCheckboxState(this);
                 }
-            
+
                 // Fetch all selected node IDs when state changes
                 let selectedNodeIds = getSelectedNodeIds();
                 console.log('Selected Node IDs: ' + selectedNodeIds.join(', '));
-            
+
                 // Send the selected node IDs to the server
                 sendSelectedNodeIds(selectedNodeIds);
             });
@@ -204,17 +230,19 @@ document.addEventListener("DOMContentLoaded", function () {
         text.textContent = nodeData.name;
         nodeElement.appendChild(text);
 
-        let childrenContainer = document.createElement('div');
-        childrenContainer.className = 'children';
-        childrenContainer.style.overflow = 'hidden';
-        childrenContainer.style.maxHeight = '0';
-        childrenContainer.style.transition = 'max-height 0.15s ease-in-out';
-        nodeData.children.forEach(child => childrenContainer.appendChild(createNode(child)));
-        nodeElement.appendChild(childrenContainer);
+        // Create container for child nodes only if there are children
+        if (Array.isArray(nodeData.children) && nodeData.children.length > 0) {
+            let childrenContainer = document.createElement('div');
+            childrenContainer.className = 'children';
+            childrenContainer.style.overflow = 'hidden';
+            childrenContainer.style.maxHeight = '0';
+            childrenContainer.style.transition = 'max-height 0.15s ease-in-out';
+            nodeData.children.forEach(child => childrenContainer.appendChild(createNode(child)));
+            nodeElement.appendChild(childrenContainer);
+        }
 
         return nodeElement;
     }
-
 
     // Function to toggle the visibility of children elements
     function toggleChildrenVisibility(container) {
@@ -249,11 +277,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Function to render the whole tree
-    function renderTree() {
+    function renderTree(data) {
         const treeContainer = document.getElementById('tree');
-        treeContainer.innerHTML = '';
-        treeContainer.appendChild(createNode(data));
+        treeContainer.innerHTML = ''; // Clear previous contents
+        treeContainer.appendChild(createNode(data)); // Build tree from data
     }
 
-    renderTree();
+    // Decide which data source to use based on configuration
+    if (config.useServerData) {
+        fetchTreeData(); // Fetch data from server if configured to do so
+    } else {
+        renderTree(hardcodedData); // Use hardcoded data if server fetch is not enabled
+    }
 });
