@@ -4,16 +4,16 @@ document.addEventListener("DOMContentLoaded", function () {
         checkboxMode: 'all',  // 'all' OR 'none' // Show checkboxes in front of nodes // 'leaf' option is not currently supported
         useIcons: false,       // true OR false // Use folder (or any) icons in front of the nodes
         populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
-        useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use data from frontend
+        useServerData: true,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use data from frontend
         maxRecursionDepth: 500, // 0 = No limit // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
-        treeModel: 'nested' // 'flat' for simple parent structure, or 'nested' for structures with children
+        treeModel: 'flat' // 'flat' for simple parent structure, or 'nested' for structures with children
     };
 
     if (config.checkboxMode === 'leaf') {
         config.populateCheckboxSelection = false;
     }
 
-    // Function to send selected IDs to the server
+    // Server connection: Function to send selected IDs to the server
     function sendSelectedNodeIds(selectedIds) {
         fetch('/selectednodes', {
             method: 'POST',
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // Function to fetch tree data from the server based on config
+    // Server connection: Function to fetch tree data from the server based on config
     function fetchTreeData() {
         const url = config.treeModel === 'flat' ? '/flatnodes' : '/treenodes';
 
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // For those who don't like the server code
+    // For those who don't like servers
     // For reading frontend, nested format:
     const frontendNestedData = {
         "id": "r1",
@@ -115,7 +115,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
 
-
     // For reading frontend flat format (familiar from databases):
     const frontendFlatData = [
         { id: "r1", name: "Root Node (js, flat)", parent_id: null },
@@ -148,10 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         return root;
     }
-
-
-
-    
+   
     // SVG icons for the nodes
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 22 18 V 10 a 2 2 0 0 0 -2 -2 h -7 c -2 0 -1 -2 -3 -2 H 4 a 2 2 0 0 0 -2 2 v 10 a 2 2 0 0 0 2 2 h 16 a 2 2 0 0 0 2 -2 z"/></svg>`;
     const svgToggle = `<svg class="toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -202,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Recursive call to update the state up the tree, increasing the depth
         setParentCheckboxState(parentCheckbox, depth + 1);
     }
+
     // Function to get IDs of all selected nodes
     function getSelectedNodeIds() {
         const selectedCheckboxes = document.querySelectorAll('.node input[type="checkbox"]:checked');
