@@ -1,13 +1,17 @@
 // vanillaTree.js
 document.addEventListener("DOMContentLoaded", function () {
     const config = {
-        checkboxMode: 'all',  // 'all', 'leaf' OR 'none'
+        checkboxMode: 'all',  // 'all' OR 'none' // Experimental feature: 'leaf'
         useIcons: false,       // true OR false
         populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
         useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use hardcoded data
         maxRecursionDepth: 500, // 0 = disable // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
         treeModel: 'nested' // 'flat' for simple parent structure, 'nested' for more complicated views
     };
+
+    if (config.checkboxMode === 'leaf') {
+        config.populateCheckboxSelection = false;
+    }
 
     // Function to send selected IDs to the server
     function sendSelectedNodeIds(selectedIds) {
@@ -52,7 +56,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // If you prefer a serverless approach, you can hardcode the node data below:
+    // Don't like the server code above?...
+    // For reading hardcoded, nested format:
     const hardcodedNestedData = {
         "id": "r1",
         "name": "Root Node (js, nested)",
@@ -109,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ]
     };
 
-    //...or use flat, SQL friendly approach
+    // For reading hardcoded flat format (familiar from databases):
     const hardcodedFlatData = [
         { id: "r1", name: "Root Node (js, flat)", parent_id: null },
         { id: "c1", name: "Child Node 1", parent_id: "r1" },
@@ -122,7 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
         { id: "ggc3", name: "Great-Grandchild Node 3", parent_id: "gc3" },
         { id: "c3", name: "Child Node 3", parent_id: "r1" }
     ];
-    //...in which case you need to build it, too:
+
+    // Build tree, executes for flat model only
     function buildTree(flatData) {
         let root = null;
         const nodes = {};

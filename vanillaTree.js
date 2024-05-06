@@ -1,12 +1,17 @@
 // vanillaTree.js
 document.addEventListener("DOMContentLoaded", function () {
     const config = {
-        checkboxMode: 'all',  // 'all', 'leaf' OR 'none'
+        checkboxMode: 'all',  // 'all' OR 'none' // Experimental feature: 'leaf'
         useIcons: false,       // true OR false
         populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
-        useServerData: false,    // Server connection needed if true // true to fetch from server, false to use hardcoded data
-        maxRecursionDepth: 500 // 0 = disable // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
+        useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use hardcoded data
+        maxRecursionDepth: 500, // 0 = disable // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
+        treeModel: 'nested' // 'flat' for simple parent structure, 'nested' for more complicated views
     };
+
+    if (config.checkboxMode === 'leaf') {
+        config.populateCheckboxSelection = false;
+    }
 
     // Function to send selected IDs to the server
     function sendSelectedNodeIds(selectedIds) {
@@ -31,23 +36,31 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // Function to fetch tree data from the server
+    // Function to fetch tree data from the server based on config
     function fetchTreeData() {
-        fetch('/treenodes')
-            .then(response => response.json())
+        const url = config.treeModel === 'flat' ? '/flatnodes' : '/treenodes';
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 renderTree(data);
             })
             .catch(error => {
                 console.error('Failed to load tree data from server, using hardcoded data:', error);
-                renderTree(hardcodedData); // Fallback to hardcoded data in case of failure
+                renderTree(dataToUse); // Fallback to hardcoded data in case of failure
             });
     }
 
-    // If you prefer a serverless approach, you can hardcode the node data below:
-    const hardcodedData = {
+    // Don't like the server code above?...
+    // For reading hardcoded, nested format:
+    const hardcodedNestedData = {
         "id": "r1",
-        "name": "Root Node",
+        "name": "Root Node (js, nested)",
         "children": [
             {
                 "id": "c1",
@@ -100,6 +113,40 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         ]
     };
+
+    // For reading hardcoded flat format (familiar from databases):
+    const hardcodedFlatData = [
+        { id: "r1", name: "Root Node (js, flat)", parent_id: null },
+        { id: "c1", name: "Child Node 1", parent_id: "r1" },
+        { id: "gc1", name: "Grandchild Node 1", parent_id: "c1" },
+        { id: "ggc1", name: "Great-Grandchild Node 1", parent_id: "gc1" },
+        { id: "ggc2", name: "Great-Grandchild Node 2", parent_id: "gc1" },
+        { id: "c2", name: "Child Node 2", parent_id: "r1" },
+        { id: "gc2", name: "Grandchild Node 2", parent_id: "c2" },
+        { id: "gc3", name: "Grandchild Node 3", parent_id: "c2" },
+        { id: "ggc3", name: "Great-Grandchild Node 3", parent_id: "gc3" },
+        { id: "c3", name: "Child Node 3", parent_id: "r1" }
+    ];
+
+    // Build tree, executes for flat model only
+    function buildTree(flatData) {
+        let root = null;
+        const nodes = {};
+
+        flatData.forEach(node => {
+            nodes[node.id] = { ...node, children: [] };
+        });
+
+        flatData.forEach(node => {
+            if (node.parent_id === null) {
+                root = nodes[node.id];
+            } else {
+                nodes[node.parent_id].children.push(nodes[node.id]);
+            }
+        });
+
+        return root;
+    }
 
     // SVG icons for the nodes
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 22 18 V 10 a 2 2 0 0 0 -2 -2 h -7 c -2 0 -1 -2 -3 -2 H 4 a 2 2 0 0 0 -2 2 v 10 a 2 2 0 0 0 2 2 h 16 a 2 2 0 0 0 2 -2 z"/></svg>`;
@@ -215,7 +262,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log('Selected Node IDs: ' + selectedNodeIds.join(', '));
 
                 // Send the selected node IDs to the server
-                sendSelectedNodeIds(selectedNodeIds);
+                if (config.useServerData) {
+                    sendSelectedNodeIds(selectedNodeIds);
+                }
             });
         }
 
@@ -280,13 +329,22 @@ document.addEventListener("DOMContentLoaded", function () {
     function renderTree(data) {
         const treeContainer = document.getElementById('tree');
         treeContainer.innerHTML = ''; // Clear previous contents
-        treeContainer.appendChild(createNode(data)); // Build tree from data
+
+        // Check configuration for data model type
+        if (config.treeModel === 'flat') {
+            const hierarchicalData = buildTree(data); // Convert flat data to hierarchical structure
+            treeContainer.appendChild(createNode(hierarchicalData)); // Build tree from hierarchical data
+        } else {
+            treeContainer.appendChild(createNode(data)); // Build tree directly from hierarchical data
+        }
     }
 
     // Decide which data source to use based on configuration
     if (config.useServerData) {
         fetchTreeData(); // Fetch data from server if configured to do so
     } else {
-        renderTree(hardcodedData); // Use hardcoded data if server fetch is not enabled
+        // Use the appropriate data source based on the tree model
+        const dataToUse = config.treeModel === 'flat' ? hardcodedFlatData : hardcodedNestedData;
+        renderTree(dataToUse);
     }
 });
