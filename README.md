@@ -7,7 +7,7 @@ The vanillaTree.js script is a lightweight tool designed for creating and managi
 
 Key features of vanillaTree.js:
 
-- It supports both flat and nested tree structures, both from server or from JS
+- It supports both flat and nested tree structures, both from server and from JS
   
 - All the config is in the beginning of the main file "vanillaTree.js", and comes with easy instructions. It can be set for different modes, such as checkbox and icon displays, and manage how checkbox selections affect marking relative nodes.
   
