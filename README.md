@@ -15,5 +15,3 @@ Key features of vanillaTree.js:
 - It also switches the theme automatically due to OS dark/light theme (vanillaTree.css). Also, it's animated, and remains sharp when zooming.
 
 There's even a ready-made Go server files (main.go + go.mod) to demonstrate its usage in the main folder. You can use any server like Go, PHP, Java, Python, etc..
-
-There must also be something good in it, which can't be remembered to say now.
