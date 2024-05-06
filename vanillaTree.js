@@ -1,12 +1,12 @@
 // vanillaTree.js
 document.addEventListener("DOMContentLoaded", function () {
     const config = {
-        checkboxMode: 'all',  // 'all' OR 'none' // Experimental feature: 'leaf'
-        useIcons: false,       // true OR false
+        checkboxMode: 'all',  // 'all' OR 'none' // Show checkboxes in front of nodes // 'leaf' option is not currently supported
+        useIcons: false,       // true OR false // Use folder (or any) icons in front of the nodes
         populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
-        useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use hardcoded data
-        maxRecursionDepth: 500, // 0 = disable // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
-        treeModel: 'nested' // 'flat' for simple parent structure, 'nested' for more complicated views
+        useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use data from frontend
+        maxRecursionDepth: 500, // 0 = No limit // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
+        treeModel: 'nested' // 'flat' for simple parent structure, or 'nested' for structures with children
     };
 
     if (config.checkboxMode === 'leaf') {
@@ -51,14 +51,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 renderTree(data);
             })
             .catch(error => {
-                console.error('Failed to load tree data from server, using hardcoded data:', error);
-                renderTree(dataToUse); // Fallback to hardcoded data in case of failure
+                console.error('Failed to load tree data from server, using frontend data:', error);
+                renderTree(dataToUse); // Fallback to frontend data in case of failure
             });
     }
 
-    // Don't like the server code above?...
-    // For reading hardcoded, nested format:
-    const hardcodedNestedData = {
+    // For those who don't like the server code
+    // For reading frontend, nested format:
+    const frontendNestedData = {
         "id": "r1",
         "name": "Root Node (js, nested)",
         "children": [
@@ -114,8 +114,10 @@ document.addEventListener("DOMContentLoaded", function () {
         ]
     };
 
-    // For reading hardcoded flat format (familiar from databases):
-    const hardcodedFlatData = [
+
+
+    // For reading frontend flat format (familiar from databases):
+    const frontendFlatData = [
         { id: "r1", name: "Root Node (js, flat)", parent_id: null },
         { id: "c1", name: "Child Node 1", parent_id: "r1" },
         { id: "gc1", name: "Grandchild Node 1", parent_id: "c1" },
@@ -127,7 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
         { id: "ggc3", name: "Great-Grandchild Node 3", parent_id: "gc3" },
         { id: "c3", name: "Child Node 3", parent_id: "r1" }
     ];
-
     // Build tree, executes for flat model only
     function buildTree(flatData) {
         let root = null;
@@ -148,6 +149,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return root;
     }
 
+
+
+    
     // SVG icons for the nodes
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 22 18 V 10 a 2 2 0 0 0 -2 -2 h -7 c -2 0 -1 -2 -3 -2 H 4 a 2 2 0 0 0 -2 2 v 10 a 2 2 0 0 0 2 2 h 16 a 2 2 0 0 0 2 -2 z"/></svg>`;
     const svgToggle = `<svg class="toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
@@ -344,7 +348,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchTreeData(); // Fetch data from server if configured to do so
     } else {
         // Use the appropriate data source based on the tree model
-        const dataToUse = config.treeModel === 'flat' ? hardcodedFlatData : hardcodedNestedData;
+        const dataToUse = config.treeModel === 'flat' ? frontendFlatData : frontendNestedData;
         renderTree(dataToUse);
     }
 });
