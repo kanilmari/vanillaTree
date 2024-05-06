@@ -6,8 +6,10 @@ Key features of vanillaTree.js:
   
 - It's ready to operate with hardcoded or server-fetched data
   
-- Users can set the config to different modes, such as checkbox and icon displays, and manage how selections affect node relationships
+- The config is simple and comes with easy instructions. It can be set for different modes, such as checkbox and icon displays, and manage how selections affect node relationships
   
-- It supports also dark and light OS theme switching by default (style.css). Also, it's animated, and remains sharp when zooming.
+- It also switches theme automatically due to OS dark/light theme (style.css). Also, it's animated, and remains sharp when zooming.
 
-There's even a ready-made Go server to demonstrate its usage. Note that it's just an example, and you're free to use any server you want. :)
+There's even a ready-made Go server files (main.go + go.mod) to demonstrate its usage. 
+
+Note that Go server is just an example, and you're free to use any server you want. :)
