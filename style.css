@@ -1,6 +1,35 @@
-/* Style.css */
+:root {
+    --bg-color-light: #fff;  
+    --bg-color-dark: #333;   
+    --text-color-light: #000;  
+    --text-color-dark: #fff;   
+    --icon-color-light: #000;  
+    --icon-color-dark: #fff;   
+}
+
+body {
+    background-color: var(--bg-color-light);  
+    color: var(--text-color-light);  
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--bg-color-dark);  
+        color: var(--text-color-dark);  
+    }
+}
+
 .icon svg,
 .toggle svg {
+
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.icon svg,
+.toggle svg {
+
     width: 20px;
     height: 20px;
     cursor: pointer;
@@ -12,17 +41,13 @@
 
 .children {
     padding-left: 23px;
-}
-
-.children {
-    padding-left: 23px;
-    overflow: hidden;  /* Lisäämäni rivi */
-    max-height: 0;     /* Lisäämäni rivi */
-    transition: max-height 0.15s ease-in-out;  /* Lisäämäni rivi */
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.15s ease-in-out;
 }
 
 .children.visible {
-    max-height: 1000px;  /* Lisäämäni rivi */
+    max-height: max-content;
 }
 
 .node > span, .node > .icon, .node > input[type="checkbox"], .node > .toggle {
@@ -39,6 +64,7 @@
 }
 
 .node > .toggle {
+
     transform: rotate(-90deg);
     margin-right: 5px;
     transform-origin: center;
@@ -50,12 +76,16 @@
 }
 
 .node {
-    background-color: white;
+    background-color: var(--bg-color-light);  
+    color: var(--text-color-light);  
     width: fit-content;
     cursor: pointer;
     padding-left: 2px;
 }
 
-body {
-    background-color: #333;
+@media (prefers-color-scheme: dark) {
+    .node {
+        background-color: var(--bg-color-dark);  
+        color: var(--text-color-dark);  
+    }
 }
