@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
         checkboxMode: 'all',  // 'all' OR 'none' // Show checkboxes in front of nodes // 'leaf' option is not currently supported
         useIcons: false,       // true OR false // Use folder (or any) icons in front of the nodes
         populateCheckboxSelection: true, // true OR false // make family member nodes react when a checkbox gets selected
-        useServerData: true,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use data from frontend
+        useServerData: false,    // Server connection needed if TRUE // Set to TRUE to fetch from server, set to FALSE to use data from frontend
         maxRecursionDepth: 500, // 0 = No limit // Any other number prevents infinite loops with the amount of recursive levels possible (levels inside levels)
         treeModel: 'flat' // 'flat' for simple parent structure, or 'nested' for structures with children
     };
